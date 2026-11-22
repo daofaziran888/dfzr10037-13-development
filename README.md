@@ -81,5 +81,34 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 批量导入 · 多组归并
+
+外部元数据没有统一 Schema，同一张图谱往往由多组原始数据拼出来。批量导入的
+「多组归并」入口负责把多组来源行归并成**分组可构建行集**，再交给图谱构建：
+
+- 每条来源行用 `(组编号, 行号)` 定位；整组重复提交只落一次，不会被算成新行。
+- 同一个实体键在不同组里声明了不同类型时，候选类型全部保留（含原始组与行号），
+  此时**不**把类型相异的同键认作重复，而是把相关边标成待定端点。
+- 只有两端都已确定的边才可建立。派发时可选其中几组做局部派发，写入 `graph_build`
+  的构建结果，接收结果回挂到批量处理清单（`关联清单`/`关联批次`）。
+- 人工纠正某个端点的类型后，原本待定的边重新变成「能继续领的行」。
+
+接口（`backend/app/routers/batch_load.py`）：
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/batch_load/batches` | 批量处理清单 |
+| POST | `/api/batch_load/batches` | 登记批次并提交多组原始行 |
+| GET | `/api/batch_load/batches/{id}` | 按组给出已可建立的边及仍待定的端点 |
+| POST | `/api/batch_load/batches/{id}/groups` | 追加/重复提交原始组（幂等） |
+| GET | `/api/batch_load/batches/{id}/rowset` | 分组可构建行集 |
+| POST | `/api/batch_load/batches/{id}/dispatch` | 局部派发到图谱构建 |
+| GET | `/api/batch_load/batches/{id}/results` | 构建写入的边数据 |
+| GET | `/api/batch_load/batches/{id}/claimable` | 能继续领的行 |
+| POST | `/api/batch_load/batches/{id}/resolutions` | 提交端点类型纠正 |
+
+`batch_load` 工作台页面底部挂载 `BatchMergePanel.vue`，可直接核对候选类型、
+按组核对可建立边/待定端点、做局部派发和 D18 这类端点类型纠正。
+
 领域：数据工程
 子方向：数据分析与数据应用

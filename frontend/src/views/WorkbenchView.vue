@@ -90,6 +90,8 @@
       <span>共 {{ total }} 条{{ meta.name }}记录</span>
       <span v-if="errorMessage" class="error-text">{{ errorMessage }}</span>
     </footer>
+
+    <BatchMergePanel v-if="meta.key === 'batch_load'" ref="mergePanel" @changed="reload" />
   </section>
 </template>
 
@@ -104,9 +106,11 @@ import {
   runAction as applyAction,
 } from '@/api/backend-service'
 import type { EntryRow } from '@/data/types'
+import BatchMergePanel from '@/views/BatchMergePanel.vue'
 
 const props = defineProps<{ moduleKey: string }>()
 const meta = moduleMeta(props.moduleKey)
+const mergePanel = ref<InstanceType<typeof BatchMergePanel> | null>(null)
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')

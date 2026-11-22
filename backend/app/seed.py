@@ -651,7 +651,19 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '校验模式': '批量导入样例3',
   '导入行数': '批量导入样例3',
   '跳过行数': '批量导入样例3',
-  '导入时间': '2026-09-03'}],
+  '导入时间': '2026-09-03'},
+ {'id': 4,
+  'status': '部分跳过',
+  'pending': True,
+  'abnormal': True,
+  '任务编号': 'BATC-0004',
+  '数据文件': '设备多组归并-20261118.csv',
+  '目标图谱': '设备关系图谱',
+  '映射规则': '多组映射→同一图谱',
+  '校验模式': '分组归并',
+  '导入行数': 0,
+  '跳过行数': 0,
+  '导入时间': '2026-11-18'}],
     "report_gen": [{'id': 1,
   'status': '草稿',
   'pending': True,
@@ -845,3 +857,59 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
         },
     ]
 }
+
+
+# ---------------------------------------------------------------------------
+# 批量导入 · 多组归并种子
+#
+# 场景对应题面：同一台设备 D18 在两组里类型冲突，第三组的一条 owner 边
+# 恰好以 D18 为一端，剩下一组（独立行）的端点齐全。提交后：类型冲突的两个
+# 候选都保留（含原始组与行号），D18 相关的边、以及一条缺少端点声明的边待定，
+# 其余能建立；等人工把 D18 纠正成单一类型后，待定边重新变成可继续领的行。
+# ---------------------------------------------------------------------------
+SEED_BATCH_GROUPS: list[dict[str, Any]] = [
+    {
+        "group_id": "G-A",
+        "name": "设备台账A",
+        "rows": [
+            {"line_no": 1, "row_type": "entity", "key": "D18", "type": "传感器"},
+            {"line_no": 2, "row_type": "entity", "key": "D17", "type": "传感器"},
+            {"line_no": 3, "row_type": "entity", "key": "GW-01", "type": "网关"},
+            {"line_no": 4, "row_type": "edge", "edge_key": "A-E1",
+             "relation": "采集", "source": "D17", "target": "GW-01"},
+            {"line_no": 5, "row_type": "edge", "edge_key": "A-E2",
+             "relation": "采集", "source": "D18", "target": "GW-01"},
+        ],
+    },
+    {
+        "group_id": "G-B",
+        "name": "设备台账B",
+        "rows": [
+            {"line_no": 1, "row_type": "entity", "key": "D18", "type": "网关"},
+            {"line_no": 2, "row_type": "entity", "key": "D19", "type": "传感器"},
+            {"line_no": 3, "row_type": "entity", "key": "GW-02", "type": "网关"},
+            {"line_no": 4, "row_type": "edge", "edge_key": "B-E1",
+             "relation": "采集", "source": "D19", "target": "GW-02"},
+        ],
+    },
+    {
+        "group_id": "G-C",
+        "name": "归属关系C",
+        "rows": [
+            {"line_no": 1, "row_type": "entity", "key": "资产组-东区", "type": "资产组"},
+            {"line_no": 2, "row_type": "edge", "edge_key": "C-E1",
+             "relation": "owner", "source": "D18", "target": "资产组-东区"},
+        ],
+    },
+    {
+        "group_id": "G-D",
+        "name": "独立台账D",
+        "rows": [
+            {"line_no": 1, "row_type": "entity", "key": "D20", "type": "传感器"},
+            {"line_no": 2, "row_type": "entity", "key": "GW-03", "type": "网关"},
+            {"line_no": 3, "row_type": "edge", "edge_key": "D-E1",
+             "relation": "采集", "source": "D20", "target": "GW-03"},
+        ],
+    },
+]
+
